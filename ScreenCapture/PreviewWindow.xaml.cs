@@ -56,7 +56,7 @@ namespace ScreenCapture
         {
             var info = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
             // Check if the system language is set to Hebrew
-            if (info == "en")
+            if (info == "he")
             {
                 this.Title = "צילום מסך";
                 this.FlowDirection = FlowDirection.RightToLeft;
@@ -116,7 +116,7 @@ namespace ScreenCapture
                     encoder.Frames.Add(BitmapFrame.Create(_bitmapImage));
                     encoder.Save(fileStream);
                 }
-
+                Close();
                 MessageBox.Show("Screenshot saved successfully!", "Save", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
@@ -132,6 +132,7 @@ namespace ScreenCapture
             if (saveFileDialog.ShowDialog() == true)
             {
                 File.WriteAllText(saveFileDialog.FileName, ExtractedTextBox.Text);
+                Close();
                 MessageBox.Show("Text saved successfully!", "Save", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
@@ -139,12 +140,14 @@ namespace ScreenCapture
         private void CopyImageButton_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.SetImage(_bitmapImage);
+            Close();
             MessageBox.Show("Image copied to clipboard!", "Copy", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void CopyTextButton_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(ExtractedTextBox.Text);
+            Close();
             MessageBox.Show("Text copied to clipboard!", "Copy", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
