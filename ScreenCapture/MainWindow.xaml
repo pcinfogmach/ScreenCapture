@@ -6,10 +6,11 @@
         AllowsTransparency="True" WindowStyle="None"
         PreviewKeyDown="Window_PreviewKeyDown">
     <Window.Background>
-        <SolidColorBrush Opacity="0.1" Color="WhiteSmoke"/>
+        <SolidColorBrush Opacity="0"/>
     </Window.Background>
     <Canvas x:Name="canvas" Background="Transparent"
             MouseDown="canvas_MouseDown" 
             MouseUp="canvas_MouseUp">
+        <Rectangle Name="Overlay" Fill="LightGray" Opacity="0.3"/>
     </Canvas>
 </Window>

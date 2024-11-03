@@ -43,7 +43,7 @@
             <Button x:Name="SaveTextButton" Content="Save Text" Click="SaveTextButton_Click"/>
             <Button x:Name="CopyImageButton" Content="Copy Image" Click="CopyImageButton_Click"/>
             <Button x:Name="CopyTextButton" Content="Copy Text" Click="CopyTextButton_Click"/>
-            <Button x:Name="CancelButton" Content="Cancel" Click="CancelButton_Click"/>
+            <Button x:Name="RestartButton" Content="New Capture" Click="RestartButton_Click"/>
 
         </StackPanel>
     </Grid>

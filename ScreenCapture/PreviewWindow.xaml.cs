@@ -14,6 +14,7 @@ namespace ScreenCapture
     {
         private readonly BitmapImage _bitmapImage;
         private readonly MemoryStream _imageStream;
+        bool isNewCaptureStart;
 
         public PreviewWindow(BitmapImage bitmapImage, MemoryStream imageStream)
         {
@@ -24,7 +25,7 @@ namespace ScreenCapture
             _imageStream = imageStream;
             PreviewImage.Source = _bitmapImage;
             ExtractTextFromImage();
-            this.Closed += (s, e) => { App.Current.Shutdown(); };
+            this.Closed += (s, e) => { if (!isNewCaptureStart) App.Current.Shutdown(); };
         }
 
         private void ApplyTheme()
@@ -66,7 +67,7 @@ namespace ScreenCapture
                 SaveTextButton.Content = "שמור טקסט";
                 CopyImageButton.Content = "העתק תמונה";
                 CopyTextButton.Content = "העתק טקסט";
-                CancelButton.Content = "ביטול";
+                RestartButton.Content = "לכידה חדשה";
             }
         }
 
@@ -154,6 +155,13 @@ namespace ScreenCapture
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void RestartButton_Click(object sender, RoutedEventArgs e)
+        {
+            isNewCaptureStart = true;
+            this.Close();
+            new MainWindow().ShowDialog();
         }
     }
 }

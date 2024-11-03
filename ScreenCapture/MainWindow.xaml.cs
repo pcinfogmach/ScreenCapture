@@ -4,18 +4,25 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace ScreenCapture
 {
     public partial class MainWindow : Window
     {
-        private System.Windows.Shapes.Rectangle DragRectangle = null;
         private System.Windows.Point StartPoint, LastPoint;
+        private System.Windows.Shapes.Rectangle dashedRectangle;
+        bool isClosed;
 
         public MainWindow()
         {
             InitializeComponent();
+            this.Loaded += (s, e) => 
+            {
+                Overlay.Width = this.ActualWidth;
+                Overlay.Height = this.ActualHeight;
+            };
             Cursor = Cursors.Cross;
         }
 
@@ -29,19 +36,7 @@ namespace ScreenCapture
             StartPoint = Mouse.GetPosition(canvas);
             LastPoint = StartPoint;
 
-            DragRectangle = new System.Windows.Shapes.Rectangle
-            {
-                Width = 1,
-                Height = 1,
-                Stroke = System.Windows.Media.Brushes.Red,
-                StrokeThickness = 1,
-                Cursor = Cursors.Cross
-            };
-
-            canvas.Children.Add(DragRectangle);
-            Canvas.SetLeft(DragRectangle, StartPoint.X);
-            Canvas.SetTop(DragRectangle, StartPoint.Y);
-
+            // Start tracking mouse move and mouse up events
             canvas.MouseMove += canvas_MouseMove;
             canvas.MouseUp += canvas_MouseUp;
             canvas.CaptureMouse();
@@ -49,30 +44,62 @@ namespace ScreenCapture
 
         private void canvas_MouseMove(object sender, MouseEventArgs e)
         {
-            if (DragRectangle == null) return;
+            if (StartPoint == null) return;
 
             LastPoint = Mouse.GetPosition(canvas);
 
-            DragRectangle.Width = Math.Abs(LastPoint.X - StartPoint.X);
-            DragRectangle.Height = Math.Abs(LastPoint.Y - StartPoint.Y);
-            Canvas.SetLeft(DragRectangle, Math.Min(LastPoint.X, StartPoint.X));
-            Canvas.SetTop(DragRectangle, Math.Min(LastPoint.Y, StartPoint.Y));
+            // Calculate the selected area
+            double x = Math.Min(LastPoint.X, StartPoint.X);
+            double y = Math.Min(LastPoint.Y, StartPoint.Y);
+            double width = Math.Abs(LastPoint.X - StartPoint.X);
+            double height = Math.Abs(LastPoint.Y - StartPoint.Y);
+
+            // Create a combined geometry to clip out the selected rectangle area from the overlay
+            RectangleGeometry fullArea = new RectangleGeometry(new Rect(0, 0, canvas.ActualWidth, canvas.ActualHeight));
+            RectangleGeometry selectionArea = new RectangleGeometry(new Rect(x, y, width, height));
+            CombinedGeometry combinedGeometry = new CombinedGeometry(GeometryCombineMode.Exclude, fullArea, selectionArea);
+
+            // Apply the clipping to the overlay rectangle
+            Overlay.Clip = combinedGeometry;
+
+            // Create or update the dashed rectangle
+
+            if (dashedRectangle == null)
+            {
+                dashedRectangle = new System.Windows.Shapes.Rectangle
+                {
+                    Stroke = System.Windows.Media.Brushes.Red, // Set the outline color
+                    StrokeDashArray = new DoubleCollection { 4, 2 }, // Dash pattern
+                    StrokeThickness = 2 // Set outline thickness
+                };
+                canvas.Children.Add(dashedRectangle); // Add it to the canvas
+            }
+
+            // Set the position and size of the dashed rectangle
+            Canvas.SetLeft(dashedRectangle, x);
+            Canvas.SetTop(dashedRectangle, y);
+            dashedRectangle.Width = width;
+            dashedRectangle.Height = height;
         }
+
 
         private void canvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (DragRectangle == null) return;
             canvas.ReleaseMouseCapture();
+            canvas.MouseMove -= canvas_MouseMove;
+            canvas.MouseUp -= canvas_MouseUp;
 
             CaptureScreen();
 
-            canvas.Children.Remove(DragRectangle);
-            DragRectangle = null;
+            // Reset the overlay clip and remove selection
+            Overlay.Clip = null;
             this.Close();
         }
 
+
         private void CaptureScreen()
         {
+            if (isClosed) return;
             var screenStart = PointToScreen(StartPoint);
             var screenEnd = PointToScreen(LastPoint);
 
@@ -83,6 +110,7 @@ namespace ScreenCapture
 
             this.Closed += (s, e) =>
             {
+                isClosed = true;
                 if (width > 0 && height > 0)
                 {
                     using (Bitmap bitmap = new Bitmap(width, height))
