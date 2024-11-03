@@ -1,8 +1,10 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Tesseract;
 
@@ -16,11 +18,56 @@ namespace ScreenCapture
         public PreviewWindow(BitmapImage bitmapImage, MemoryStream imageStream)
         {
             InitializeComponent();
+            ApplyTheme();
+            SetButtonContentBasedOnLanguage();
             _bitmapImage = bitmapImage;
             _imageStream = imageStream;
             PreviewImage.Source = _bitmapImage;
             ExtractTextFromImage();
             this.Closed += (s, e) => { App.Current.Shutdown(); };
+        }
+
+        private void ApplyTheme()
+        {
+            bool isDarkTheme = IsDarkThemeEnabled();
+            if (!isDarkTheme)
+            {
+                this.Background = Brushes.WhiteSmoke;
+                this.Foreground = Brushes.Black;
+            }
+        }
+
+        private bool IsDarkThemeEnabled()
+        {
+            const string registryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+            const string registryValueName = "AppsUseLightTheme";
+
+            using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(registryKeyPath))
+            {
+                if (key?.GetValue(registryValueName) is int value)
+                {
+                    return value == 0; // 0 means Dark Theme is enabled, 1 means Light Theme
+                }
+            }
+            return false; // Default to light theme if the registry value is not found
+        }
+
+        private void SetButtonContentBasedOnLanguage()
+        {
+            var info = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            // Check if the system language is set to Hebrew
+            if (info == "en")
+            {
+                this.Title = "צילום מסך";
+                this.FlowDirection = FlowDirection.RightToLeft;
+                ExtractedTextBox.Text = "מחלץ טקסט. אנא המתן...";
+                // Change button content to Hebrew
+                SaveImageButton.Content = "שמור תמונה";
+                SaveTextButton.Content = "שמור טקסט";
+                CopyImageButton.Content = "העתק תמונה";
+                CopyTextButton.Content = "העתק טקסט";
+                CancelButton.Content = "ביטול";
+            }
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
