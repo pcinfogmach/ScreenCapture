@@ -2,7 +2,9 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -14,7 +16,7 @@ namespace ScreenCapture
     {
         private readonly BitmapImage _bitmapImage;
         private readonly MemoryStream _imageStream;
-        bool isNewCaptureStart;
+        bool doNotShutDown;
 
         public PreviewWindow(BitmapImage bitmapImage, MemoryStream imageStream)
         {
@@ -25,7 +27,7 @@ namespace ScreenCapture
             _imageStream = imageStream;
             PreviewImage.Source = _bitmapImage;
             ExtractTextFromImage();
-            this.Closed += (s, e) => { if (!isNewCaptureStart) App.Current.Shutdown(); };
+            this.Closed += (s, e) => { if (!doNotShutDown) App.Current.Shutdown(); };
         }
 
         private void ApplyTheme()
@@ -68,6 +70,7 @@ namespace ScreenCapture
                 CopyImageButton.Content = "העתק תמונה";
                 CopyTextButton.Content = "העתק טקסט";
                 RestartButton.Content = "לכידה חדשה";
+                GoogleTranslateButton.ToolTip = "תרגום גוגל";
             }
         }
 
@@ -82,13 +85,27 @@ namespace ScreenCapture
             {
                 try
                 {
+                    string tessDataFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tessdata");
+                    List<string> files = Directory.GetFiles(tessDataFolder, "*.traineddata").ToList();
+                    string tessLang = Path.GetFileNameWithoutExtension(files[0]);
+                    if (files.Count > 1)
+                    {
+                        for (int i = 1; i < files.Count; i++) { tessLang += "+" + Path.GetFileNameWithoutExtension(files[i]); }
+                    }
+
                     // Use the existing MemoryStream with Tesseract
                     _imageStream.Seek(0, SeekOrigin.Begin); // Reset position
-                    using (var engine = new TesseractEngine(@"./tessdata", "heb+eng", EngineMode.Default))
+                    using (var engine = new TesseractEngine(@"./tessdata", tessLang, EngineMode.Default))
                     using (var img = Pix.LoadFromMemory(_imageStream.ToArray()))
                     using (var page = engine.Process(img))
                     {
-                        return page.GetText().Trim();
+                        // Get the extracted text
+                        var text = page.GetText().Trim();
+
+                        // Replace single newlines with spaces and keep paragraph breaks
+                        text = System.Text.RegularExpressions.Regex.Replace(text, @"(?<!\n)\n(?!\n)", " ");
+
+                        return text;
                     }
                 }
                 catch (Exception ex)
@@ -97,8 +114,6 @@ namespace ScreenCapture
                 }
             });
         }
-
-
 
 
         private void SaveImageButton_Click(object sender, RoutedEventArgs e)
@@ -159,9 +174,33 @@ namespace ScreenCapture
 
         private void RestartButton_Click(object sender, RoutedEventArgs e)
         {
-            isNewCaptureStart = true;
+            doNotShutDown = true;
             this.Close();
             new MainWindow().ShowDialog();
+        }
+
+        private async void GoogleTranslateButton_Click(object sender, RoutedEventArgs e)
+        {
+            string textToTranslate = ExtractedTextBox.Text;          
+            string targetLanguage = Regex.Match(textToTranslate, @"\p{IsHebrew}").Success ? "en" : "he";
+
+            var browser = new WebBrowser();
+            string allowedUrl = $"https://translate.google.com/?sl=auto&tl={targetLanguage}&text={Uri.EscapeDataString(textToTranslate)}&op=translate";
+
+            browser.Navigate(allowedUrl);
+            browser.Navigating += (s, args) =>
+            {
+                if (!args.Uri.AbsoluteUri.StartsWith("https://translate.google.com"))
+                {
+                    args.Cancel = true; // Cancel navigation if URL is not allowed
+                }
+            };
+
+            Window window = new Window { Content = browser, Title = "Google Translate" };
+            doNotShutDown = true;
+            this.Close();
+            window.Closing += (s, e) => { App.Current.Shutdown(); };
+            window.Show();
         }
     }
 }
