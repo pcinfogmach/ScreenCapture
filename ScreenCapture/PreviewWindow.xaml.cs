@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -179,28 +180,12 @@ namespace ScreenCapture
             new MainWindow().ShowDialog();
         }
 
-        private async void GoogleTranslateButton_Click(object sender, RoutedEventArgs e)
+        private void GoogleTranslateButton_Click(object sender, RoutedEventArgs e)
         {
             string textToTranslate = ExtractedTextBox.Text;          
             string targetLanguage = Regex.Match(textToTranslate, @"\p{IsHebrew}").Success ? "en" : "he";
-
-            var browser = new WebBrowser();
-            string allowedUrl = $"https://translate.google.com/?sl=auto&tl={targetLanguage}&text={Uri.EscapeDataString(textToTranslate)}&op=translate";
-
-            browser.Navigate(allowedUrl);
-            browser.Navigating += (s, args) =>
-            {
-                if (!args.Uri.AbsoluteUri.StartsWith("https://translate.google.com"))
-                {
-                    args.Cancel = true; // Cancel navigation if URL is not allowed
-                }
-            };
-
-            Window window = new Window { Content = browser, Title = "Google Translate" };
-            doNotShutDown = true;
-            this.Close();
-            window.Closing += (s, e) => { App.Current.Shutdown(); };
-            window.Show();
+            string translateUrl = $"https://translate.google.com/?sl=auto&tl={targetLanguage}&text={Uri.EscapeDataString(textToTranslate)}&op=translate";
+            Process.Start(new ProcessStartInfo(translateUrl) { UseShellExecute = true });
         }
     }
 }
