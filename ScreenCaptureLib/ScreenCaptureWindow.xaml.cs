@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing; // For screen capturing (Bitmap, Graphics)
+﻿using System.Drawing; // For screen capturing (Bitmap, Graphics)
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
