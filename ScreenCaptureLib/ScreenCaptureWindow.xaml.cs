@@ -7,18 +7,16 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace ScreenCapture
+namespace ScreenCaptureLib
 {
-    public partial class MainWindow : Window
+    public partial class ScreenCaptureWindow : Window
     {
         private System.Windows.Point StartPoint, LastPoint;
         private System.Windows.Shapes.Rectangle dashedRectangle;
         bool isClosed;
-        bool _shutDownOnEsc;
 
-        public MainWindow(bool shutDownOnEsc = true)
+        public ScreenCaptureWindow()
         {
-            _shutDownOnEsc = shutDownOnEsc;
             InitializeComponent();
             this.Loaded += (s, e) => 
             {
@@ -32,8 +30,7 @@ namespace ScreenCapture
         {
             if (e.Key == Key.Escape) 
             {
-                this.Close(); 
-                if (_shutDownOnEsc) App.Current.Shutdown(); 
+                this.Close();
                 e.Handled = true; 
             }
         }
@@ -100,13 +97,13 @@ namespace ScreenCapture
 
             // Reset the overlay clip and remove selection
             Overlay.Clip = null;
-            this.Close();
         }
 
-
+        bool isBusy;
         private void CaptureScreen()
         {
-            if (isClosed) return;
+            if (isBusy) return;
+            isBusy = true;
             var screenStart = PointToScreen(StartPoint);
             var screenEnd = PointToScreen(LastPoint);
 
@@ -115,33 +112,31 @@ namespace ScreenCapture
             int width = (int)Math.Abs(screenEnd.X - screenStart.X);
             int height = (int)Math.Abs(screenEnd.Y - screenStart.Y);
 
-            this.Closed += (s, e) =>
+
+            if (width > 0 && height > 0)
             {
-                isClosed = true;
-                if (width > 0 && height > 0)
+                using (Bitmap bitmap = new Bitmap(width, height))
                 {
-                    using (Bitmap bitmap = new Bitmap(width, height))
+                    using (Graphics g = Graphics.FromImage(bitmap))
                     {
-                        using (Graphics g = Graphics.FromImage(bitmap))
-                        {
-                            g.CopyFromScreen(x, y, 0, 0, new System.Drawing.Size(width, height));
-                        }
-
-                        MemoryStream memory = new MemoryStream();
-                        bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Png);
-                        memory.Position = 0;
-
-                        BitmapImage bitmapImage = new BitmapImage();
-                        bitmapImage.BeginInit();
-                        bitmapImage.StreamSource = memory;
-                        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmapImage.EndInit();
-
-                        PreviewWindow previewWindow = new PreviewWindow(bitmapImage, memory);
-                        previewWindow.ShowDialog();
+                        g.CopyFromScreen(x, y, 0, 0, new System.Drawing.Size(width, height));
                     }
+
+                    MemoryStream memory = new MemoryStream();
+                    bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Png);
+                    memory.Position = 0;
+
+                    BitmapImage bitmapImage = new BitmapImage();
+                    bitmapImage.BeginInit();
+                    bitmapImage.StreamSource = memory;
+                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmapImage.EndInit();
+
+                    PreviewWindow previewWindow = new PreviewWindow(bitmapImage, memory);
+                    previewWindow.Loaded += (s, e) => { this.Close(); };
+                    previewWindow.Show();
                 }
-            };
+            }
         }
     }
 }

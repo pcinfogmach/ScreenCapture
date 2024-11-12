@@ -11,13 +11,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Tesseract;
 
-namespace ScreenCapture
+namespace ScreenCaptureLib
 {
     public partial class PreviewWindow : Window
     {
         private readonly BitmapImage _bitmapImage;
         private readonly MemoryStream _imageStream;
-        bool doNotShutDown;
 
         public PreviewWindow(BitmapImage bitmapImage, MemoryStream imageStream)
         {
@@ -28,7 +27,6 @@ namespace ScreenCapture
             _imageStream = imageStream;
             PreviewImage.Source = _bitmapImage;
             ExtractTextFromImage();
-            this.Closed += (s, e) => { if (!doNotShutDown) App.Current.Shutdown(); };
         }
 
         private void ApplyTheme()
@@ -77,7 +75,7 @@ namespace ScreenCapture
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape) { this.Close(); App.Current.Shutdown(); e.Handled = true; }
+            if (e.Key == Key.Escape) { this.Close(); e.Handled = true; }
         }
 
         private async void ExtractTextFromImage()
@@ -175,9 +173,8 @@ namespace ScreenCapture
 
         private void RestartButton_Click(object sender, RoutedEventArgs e)
         {
-            doNotShutDown = true;
-            this.Close();
-            new MainWindow().ShowDialog();
+            Window window = new ScreenCaptureWindow();
+            window.Loaded += (s, e) => { this.Close(); };
         }
 
         private void GoogleTranslateButton_Click(object sender, RoutedEventArgs e)
