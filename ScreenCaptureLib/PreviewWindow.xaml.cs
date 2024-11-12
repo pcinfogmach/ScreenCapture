@@ -1,11 +1,9 @@
 ﻿using Microsoft.Win32;
-using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -70,6 +68,7 @@ namespace ScreenCaptureLib
                 CopyTextButton.Content = "העתק טקסט";
                 RestartButton.Content = "לכידה חדשה";
                 GoogleTranslateButton.ToolTip = "תרגום גוגל";
+                EditImageButton.ToolTip = "ערוך תמונה";
             }
         }
 
@@ -175,6 +174,7 @@ namespace ScreenCaptureLib
         {
             Window window = new ScreenCaptureWindow();
             window.Loaded += (s, e) => { this.Close(); };
+            window.Show();
         }
 
         private void GoogleTranslateButton_Click(object sender, RoutedEventArgs e)
@@ -183,6 +183,24 @@ namespace ScreenCaptureLib
             string targetLanguage = Regex.Match(textToTranslate, @"\p{IsHebrew}").Success ? "en" : "he";
             string translateUrl = $"https://translate.google.com/?sl=auto&tl={targetLanguage}&text={Uri.EscapeDataString(textToTranslate)}&op=translate";
             Process.Start(new ProcessStartInfo(translateUrl) { UseShellExecute = true });
+        }
+
+        private void EditImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Generate a temporary file path
+            string tempFilePath = Path.Combine(Path.GetTempPath(), "temp_image.png");
+
+            BitmapEncoder encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(_bitmapImage));
+
+            using FileStream fileStream = new FileStream(tempFilePath, FileMode.Create);
+            encoder.Save(fileStream);
+
+            // Start Paint with the image file path
+            using Process process = new Process();
+            process.StartInfo.FileName = "mspaint";
+            process.StartInfo.ArgumentList.Add(tempFilePath);
+            process.Start();
         }
     }
 }
