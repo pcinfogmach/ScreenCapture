@@ -14,9 +14,11 @@ namespace ScreenCapture
         private System.Windows.Point StartPoint, LastPoint;
         private System.Windows.Shapes.Rectangle dashedRectangle;
         bool isClosed;
+        bool _shutDownOnEsc;
 
-        public MainWindow()
+        public MainWindow(bool shutDownOnEsc = true)
         {
+            _shutDownOnEsc = shutDownOnEsc;
             InitializeComponent();
             this.Loaded += (s, e) => 
             {
@@ -28,7 +30,12 @@ namespace ScreenCapture
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape) { this.Close(); App.Current.Shutdown(); e.Handled = true; }
+            if (e.Key == Key.Escape) 
+            {
+                this.Close(); 
+                if (_shutDownOnEsc) App.Current.Shutdown(); 
+                e.Handled = true; 
+            }
         }
 
         private void canvas_MouseDown(object sender, MouseButtonEventArgs e)
