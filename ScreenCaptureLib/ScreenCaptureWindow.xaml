@@ -11,6 +11,6 @@
     <Canvas x:Name="canvas" Background="Transparent"
             MouseDown="canvas_MouseDown" 
             MouseUp="canvas_MouseUp">
-        <Rectangle Name="Overlay" Fill="LightGray" Opacity="0.3"/>
+        <Rectangle Name="Overlay" Fill="#7F7F7F" Opacity="0.3"/>
     </Canvas>
 </Window>

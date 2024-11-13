@@ -17,6 +17,19 @@ namespace ScreenCaptureLib
         public ScreenCaptureWindow()
         {
             InitializeComponent();
+            Topmost = true;
+            this.Loaded += (s, e) =>
+            {
+                Overlay.Width = this.ActualWidth;
+                Overlay.Height = this.ActualHeight;
+            };
+            Cursor = Cursors.Cross;
+        }
+
+        public ScreenCaptureWindow(bool isTopMost = true)
+        {
+            InitializeComponent();
+            if (isTopMost) Topmost = true;
             this.Loaded += (s, e) => 
             {
                 Overlay.Width = this.ActualWidth;
@@ -103,6 +116,9 @@ namespace ScreenCaptureLib
         {
             if (isBusy) return;
             isBusy = true;
+
+            this.Hide();
+
             var screenStart = PointToScreen(StartPoint);
             var screenEnd = PointToScreen(LastPoint);
 
@@ -110,7 +126,6 @@ namespace ScreenCaptureLib
             int y = (int)Math.Min(screenStart.Y, screenEnd.Y);
             int width = (int)Math.Abs(screenEnd.X - screenStart.X);
             int height = (int)Math.Abs(screenEnd.Y - screenStart.Y);
-
 
             if (width > 0 && height > 0)
             {
