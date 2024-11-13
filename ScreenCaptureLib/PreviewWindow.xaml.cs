@@ -101,8 +101,8 @@ namespace ScreenCaptureLib
                         var text = page.GetText().Trim();
 
                         // Replace single newlines with spaces and keep paragraph breaks
-                        text = System.Text.RegularExpressions.Regex.Replace(text, @"(?<!\n)\n(?!\n)", " ");
-
+                        text = Regex.Replace(text, @"(?<!\n)\n(?!\n)", " ");
+                        text = Regex.Replace(text, @"\n+", "\n");
                         return text;
                     }
                 }
@@ -184,7 +184,6 @@ namespace ScreenCaptureLib
                     Top = this.Owner.Top,
                     Owner = this.Owner,
                 };
-                captureWindow.Show();
             }
             else
             {

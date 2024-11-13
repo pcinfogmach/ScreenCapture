@@ -44,7 +44,7 @@
                      Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Window}}"
                      Text="Extracting text. Please wait..."
                      Margin="5,0,5,0" Padding="3"
-                     TextWrapping="Wrap" TextAlignment="Justify"
+                     TextWrapping="Wrap" TextAlignment="Center"
                      VerticalScrollBarVisibility="Auto"/>
             <Button x:Name="GoogleTranslateButton" VerticalAlignment="Bottom" HorizontalAlignment="Left" 
                     Width="auto" BorderThickness="0"
