@@ -172,9 +172,26 @@ namespace ScreenCaptureLib
 
         private void RestartButton_Click(object sender, RoutedEventArgs e)
         {
-            Window window = new ScreenCaptureWindow();
-            window.Loaded += (s, e) => { this.Close(); };
-            window.Show();
+            Window captureWindow;
+            if (this.Owner != null) 
+            {
+                captureWindow = new ScreenCaptureLib.ScreenCaptureWindow(false)
+                {
+                    WindowState = Owner.WindowState,
+                    Height = Owner.ActualHeight,
+                    Width = Owner.ActualWidth,
+                    Left = Owner.Left,
+                    Top = Owner.Top,
+                    Owner = Owner.Owner,
+                };
+                captureWindow.Show();
+            }
+            else
+            {
+                captureWindow = new ScreenCaptureWindow();
+            }
+            captureWindow.Loaded += (s, e) => { this.Close(); };
+            captureWindow.Show();
         }
 
         private void GoogleTranslateButton_Click(object sender, RoutedEventArgs e)

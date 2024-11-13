@@ -147,6 +147,7 @@ namespace ScreenCaptureLib
                     bitmapImage.EndInit();
 
                     PreviewWindow previewWindow = new PreviewWindow(bitmapImage, memory);
+                    if (this.Owner != null) { previewWindow.Owner = this.Owner; }
                     previewWindow.Loaded += (s, e) => { this.Close(); };
                     previewWindow.Show();
                 }
