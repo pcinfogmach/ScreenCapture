@@ -175,14 +175,14 @@ namespace ScreenCaptureLib
             Window captureWindow;
             if (this.Owner != null) 
             {
-                captureWindow = new ScreenCaptureLib.ScreenCaptureWindow(false)
+                captureWindow = new ScreenCaptureWindow(false)
                 {
-                    WindowState = Owner.WindowState,
-                    Height = Owner.ActualHeight,
-                    Width = Owner.ActualWidth,
-                    Left = Owner.Left,
-                    Top = Owner.Top,
-                    Owner = Owner.Owner,
+                    WindowState = this.Owner.WindowState,
+                    Height = this.Owner.ActualHeight,
+                    Width = this.Owner.ActualWidth,
+                    Left = this.Owner.Left,
+                    Top = this.Owner.Top,
+                    Owner = this.Owner,
                 };
                 captureWindow.Show();
             }
@@ -190,7 +190,8 @@ namespace ScreenCaptureLib
             {
                 captureWindow = new ScreenCaptureWindow();
             }
-            captureWindow.Loaded += (s, e) => { this.Close(); };
+
+            captureWindow.Loaded += (s, e) => {  this.Close(); }; 
             captureWindow.Show();
         }
 
